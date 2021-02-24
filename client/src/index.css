@@ -6,21 +6,70 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   user-select: none;
+  line-height: 1.3;
+  -webkit-app-region: drag;
+  min-height: 100vh;
+  background-color: #fafafa;
+  user-select: none;
+  overflow: auto;
 }
 
+button,
+input,
+select,
 ::-webkit-scrollbar {
   display: none;
 }
 
 .header {
-  height: 60px;
-  width: 100%;
-  background-color: rgb(163, 131, 88);
-  -webkit-app-region: drag;
-  color: white;
-  font-weight: 700;
-  font-size: 22px;
+  background: #ddd;
+  height: 40px;
+}
+
+.todo-list {
+  padding: 0 20px;
+  display: grid;
+  grid-auto-flow: row;
+  grid-gap: 40px;
+  margin-top: 40px;
+}
+
+.collection-title {
+  font-weight: 600;
+  font-size: 20px;
+  padding-bottom: 8px;
+}
+
+.time-track-entry-list {
+  background-color: white;
+  border-radius: 3px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.08);
+}
+
+.time-track-entry {
   display: flex;
-  justify-content: center;
   align-items: center;
+  -webkit-app-region: no-drag;
+}
+
+.time-track-entry-list-item:not(:first-child) .time-track-entry {
+  border-top: 1px solid #f6f6f6;
+}
+
+.reset-input {
+  appearance: none;
+  border: none;
+  overflow: auto;
+  outline: none;
+  box-shadow: none;
+  background-color: transparent;
+  resize: none !important;
+  font: inherit;
+  border-radius: 0;
+  color: inherit;
+}
+
+.time-track-entry--input {
+  flex-grow: 1;
+  padding: 10px 14px;
 }

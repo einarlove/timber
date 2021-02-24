@@ -4,6 +4,7 @@ import { is } from 'electron-util'
 let mainWindow: BrowserWindow
 async function createMainWindow() {
   mainWindow = new BrowserWindow({
+    backgroundColor: '#FFF',
     title: "Timber",
     width: 500,
     height: 800,
