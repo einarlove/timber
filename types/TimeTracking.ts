@@ -1,11 +1,25 @@
 export type TimeTrackingCollection = {
-  key: string
+  id: string
   displayName: string
-  connection?: unknown
+  repositories?: GitConnection[]
+  project?: PowerOfficeConnection
   entries: TimeTrackingEntry[]
+  suggestions?: TimeTrackingEntry[]
 }
 
 export type TimeTrackingEntry = {
   id: string
   description: string
+  completedAt?: string
+  partialCompletedAt?: string
+}
+
+type PowerOfficeConnection = {
+  projectId: string
+  activityId: string
+}
+
+export type GitConnection = {
+  directory: string
+  name: string
 }

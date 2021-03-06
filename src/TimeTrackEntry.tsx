@@ -1,6 +1,6 @@
 import React from "react"
 import AutosizeTextarea from "react-autosize-textarea"
-import { TimeTrackingEntry } from "../../types/TimeTracking"
+import { TimeTrackingEntry } from "../types/TimeTracking"
 
 type TimeTrackEntryProps = Partial<TimeTrackingEntry> & {
   set: (update: (entry: TimeTrackingEntry) => void) => void
@@ -10,16 +10,29 @@ type TimeTrackEntryProps = Partial<TimeTrackingEntry> & {
   // focusNewEntry?: () => void
   focus?: (direction: "backward" | "forward" | "new") => void
   createNewAfter?: () => void
-  inputRef: React.Ref<HTMLTextAreaElement | undefined>
+  defaultChecked?: boolean
+  viewDate: Date
+  inputRef: React.Ref<HTMLTextAreaElement>
 }
 
 export function TimeTrackEntry(props: TimeTrackEntryProps) {
   return (
     <div className="time-track-entry">
+      <input
+        type="checkbox"
+        defaultChecked={Boolean(props.completedAt || props.partialCompletedAt) || false}
+        onChange={event =>
+          props.set(entry => {
+            entry.completedAt = event.currentTarget.checked
+              ? props.viewDate.toISOString()
+              : undefined
+          })
+        }
+      />
       <AutosizeTextarea
         ref={props.inputRef}
         autoFocus={props.autoFocus}
-        className="reset-input time-track-entry--input"
+        className="time-track-entry-input"
         defaultValue={props.description}
         spellCheck="false"
         autoCorrect="off"
@@ -40,6 +53,7 @@ export function TimeTrackEntry(props: TimeTrackEntryProps) {
           }
           if (event.key === "Backspace" && !event.repeat && !event.currentTarget.value) {
             event.preventDefault()
+            console.log("dis")
             props.focus?.("backward")
           }
         }}

@@ -1,35 +1,60 @@
 {
   "name": "timber",
   "version": "1.0.0",
-  "description": "",
   "private": true,
   "main": "main/index.js",
+  "author": "Einar Löve <post@einarlove.com>",
   "scripts": {
-    "dev:main": "nodemon --exec 'electron .' --watch main --ext 'ts,json'",
-    "dev:client": "cd client && BROWSER=none npm start",
+    "build": "react-scripts build",
+    "dev:main": "TS_NODE_PROJECT=main/tsconfig.json nodemon --exec 'electron .' --watch main --ext 'ts,json'",
+    "dev:client": "BROWSER=none react-scripts start",
     "dev": "PORT=${PORT:=5000} concurrently 'npm run dev:client' 'wait-on tcp:$PORT && npm run dev:main'"
   },
-  "author": "Einar Löve <post@einarlove.com>",
-  "license": "ISC",
   "eslintConfig": {
     "extends": [
       "react-app"
     ]
   },
+  "prettier": {
+    "semi": false,
+    "printWidth": 100,
+    "arrowParens": "avoid"
+  },
+  "browserslist": {
+    "production": [
+      "last 1 chrome version"
+    ],
+    "development": [
+      "last 1 chrome version"
+    ]
+  },
   "dependencies": {
+    "@seznam/compose-react-refs": "^1.0.5",
     "@types/node": "^12.20.4",
     "@types/node-fetch": "^2.5.8",
+    "@types/react": "^17.0.2",
+    "@types/react-dom": "^17.0.1",
     "concurrently": "^6.0.0",
     "electron": "^11.3.0",
+    "electron-store": "^7.0.2",
     "electron-util": "^0.14.2",
+    "framer-motion": "^3.6.7",
     "immer": "^8.0.1",
+    "lodash.startcase": "^4.4.0",
     "node-fetch": "^2.6.1",
     "nodemon": "^2.0.7",
     "playwright": "^1.8.1",
+    "react": "^17.0.1",
     "react-autosize-textarea": "^7.1.0",
+    "react-dom": "^17.0.1",
+    "react-hotkeys-hook": "^3.1.0",
+    "react-scripts": "4.0.2",
     "ts-node": "^9.1.1",
     "typescript": "^4.1.5",
     "wait-on": "^5.2.1",
     "zustand": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/lodash.startcase": "^4.4.6"
   }
 }

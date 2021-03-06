@@ -13,13 +13,14 @@ const fetch = require("node-fetch")
   await page.click('input[type="submit"]')
   const credentialsCookies = await context.cookies()
 
-
-  console.log(credentialsCookies)
-  const result = await fetch('https://go.poweroffice.net/api/timetracking/timesheet/timesheet/week?weekNo=6&year=2021', {
-    headers: {
-      cookie: credentialsCookies.map(cookie => `${cookie.name}=${cookie.value}`).join(';')
+  const result = await fetch(
+    "https://go.poweroffice.net/api/timetracking/timesheet/timesheet/week?weekNo=6&year=2021",
+    {
+      headers: {
+        cookie: credentialsCookies.map(cookie => `${cookie.name}=${cookie.value}`).join(";"),
+      },
     }
-  })
+  )
 
   // const { data } = await result.json()
   // console.log(data.lines.reduce((timesheet, line) => {
