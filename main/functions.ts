@@ -16,13 +16,13 @@ export const getCollectionGitSuggestions = async (
 const getGitSuggestions = async (directory: string): Promise<TimeTrackingEntry[]> =>
   new Promise((resolve, reject) =>
     exec(
-      `cd ${directory} && git log --after="2021-02-20" --before="2021-02-27" --no-merges --author=$(git config user.email) --pretty="format:%h•%ci•%s"`,
+      `cd ${directory} && git log --after="2021-02-20" --before="2021-03-27" --no-merges --author=$(git config user.email) --pretty="format:%h•%ci•%s"`,
       (error, output) => {
         if (error) return reject(error)
         resolve(
           output.split("\n").map(line => {
-            const [, hash, date, description] = line.match(/(.*)•(.*)•(.*)/) || []
-            return { id: hash, date, description }
+            const [, hash, completedAt, description] = line.match(/(.*)•(.*)•(.*)/) || []
+            return { id: hash, completedAt, description }
           })
         )
       }

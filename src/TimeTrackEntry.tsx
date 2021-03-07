@@ -1,5 +1,7 @@
 import React from "react"
 import AutosizeTextarea from "react-autosize-textarea"
+import { BiCheck } from "react-icons/bi"
+
 import { TimeTrackingEntry } from "../types/TimeTracking"
 
 type TimeTrackEntryProps = Partial<TimeTrackingEntry> & {
@@ -18,17 +20,20 @@ type TimeTrackEntryProps = Partial<TimeTrackingEntry> & {
 export function TimeTrackEntry(props: TimeTrackEntryProps) {
   return (
     <div className="time-track-entry">
-      <input
-        type="checkbox"
-        defaultChecked={Boolean(props.completedAt || props.partialCompletedAt) || false}
-        onChange={event =>
-          props.set(entry => {
-            entry.completedAt = event.currentTarget.checked
-              ? props.viewDate.toISOString()
-              : undefined
-          })
-        }
-      />
+      <label className="time-track-entry-checkbox">
+        <input
+          type="checkbox"
+          defaultChecked={Boolean(props.completedAt || props.partialCompletedAt) || false}
+          onChange={event =>
+            props.set(entry => {
+              entry.completedAt = event.currentTarget.checked
+                ? props.viewDate.toISOString()
+                : undefined
+            })
+          }
+        />
+        <BiCheck />
+      </label>
       <AutosizeTextarea
         ref={props.inputRef}
         autoFocus={props.autoFocus}

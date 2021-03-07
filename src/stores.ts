@@ -31,13 +31,16 @@ export const useCollection = (id: string) =>
 const { ipcRenderer: ipc } = window.require("electron")
 
 ipc.invoke("get-collections").then((collections: TimeTrackingCollection[]) => {
+  console.log("request collections upstream")
   useCollectionsStore.setState({ collections })
+
+  useCollectionsStore.subscribe(store => {
+    console.log("send collections upstream")
+    ipc.send("set-collections", store.collections)
+  })
 })
 
 ipc.on("set-collections", (event, collections) => {
+  console.log("send collections downstream")
   useCollectionsStore.setState({ collections })
-})
-
-useCollectionsStore.subscribe(store => {
-  ipc.send("set-collections", store.collections)
 })

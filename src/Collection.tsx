@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import { useCollection, useCollectionsStore } from "./stores"
 import { TimeTrackEntry } from "./TimeTrackEntry"
 import { TimeTrackingEntry } from "../types/TimeTracking"
-import { datesAreOnSameDay } from "./utils"
+import { isSameDay } from "./utils"
 
 type CollectionProps = {
   id: string
@@ -16,17 +16,22 @@ const { ipcRenderer: ipc } = window.require("electron")
 const getNewEntry = (initial?: Partial<TimeTrackingEntry>) => ({
   id: new Date().toISOString(),
   description: "",
-  date: new Date().toISOString(),
   ...initial,
 })
 
 export function Collection({ id, viewDate }: CollectionProps) {
   const autoFocusId = React.useRef<string>()
   const entryInputsRef = React.useRef<Record<string, HTMLTextAreaElement>>({})
-  const newEntryRef = React.useRef<HTMLTextAreaElement>(null)
+  const newEntryRef = React.useRef<TimeTrackingEntry>(getNewEntry())
+  const newEntryNodeRef = React.useRef<HTMLTextAreaElement>(null)
   const { collection, setCollection } = useCollection(id)
 
   if (!collection) return null
+  const suggestions = collection.suggestions
+    ?.filter(suggestion => !collection.entries.some(entry => entry.id === suggestion.id))
+    .filter(
+      suggestion => !suggestion.completedAt || isSameDay(new Date(suggestion.completedAt), viewDate)
+    )
 
   return (
     <div className="collection">
@@ -52,13 +57,13 @@ export function Collection({ id, viewDate }: CollectionProps) {
           {collection.entries
             ?.filter(entry => {
               const completedDate = entry.completedAt || entry.partialCompletedAt
-              return completedDate ? datesAreOnSameDay(new Date(completedDate), viewDate) : true
+              return completedDate ? isSameDay(new Date(completedDate), viewDate) : true
             })
             .map((entry, index, entries) => {
               return (
                 <motion.div
                   key={entry.id}
-                  className="time-track-entry-list-item"
+                  className="collection-entry-list-item"
                   layout
                   transition={{ type: "spring", duration: 0.2, bounce: 0 }}
                   initial={{ opacity: 0, height: 0 }}
@@ -82,12 +87,12 @@ export function Collection({ id, viewDate }: CollectionProps) {
                       const nextEntry = collection.entries[index + 1]
                       const focusEntry = direction === "backward" ? previousEntry : nextEntry
                       const focusInput =
-                        entryInputsRef.current[focusEntry?.id] || newEntryRef.current
+                        entryInputsRef.current[focusEntry?.id] || newEntryNodeRef.current
                       focusInput?.focus()
                     }}
                     createNewAfter={() => {
                       if (index === entries.length - 1) {
-                        newEntryRef.current?.focus()
+                        newEntryNodeRef.current?.focus()
                       } else {
                         setCollection(state => {
                           const id = new Date().toISOString()
@@ -100,26 +105,56 @@ export function Collection({ id, viewDate }: CollectionProps) {
                 </motion.div>
               )
             })}
+          <motion.div
+            key={newEntryRef.current.id}
+            className="collection-entry-list-item"
+            layout
+            transition={{ type: "spring", duration: 0.2, bounce: 0 }}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            style={{ overflow: "hidden" }}
+          >
+            <TimeTrackEntry
+              inputRef={newEntryNodeRef}
+              viewDate={viewDate}
+              set={update => {
+                newEntryRef.current = produce(newEntryRef.current, update)
+                if (newEntryRef.current.description) {
+                  setCollection(state => void state.entries.push(newEntryRef.current))
+                  newEntryRef.current = getNewEntry()
+                  setTimeout(() => newEntryNodeRef.current?.focus())
+                }
+              }}
+            />
+          </motion.div>
         </AnimatePresence>
       </div>
-      <TimeTrackEntry
-        inputRef={newEntryRef}
-        viewDate={viewDate}
-        key={"new-entry" + collection.entries.length}
-        set={update => {
-          const entry = produce(getNewEntry(), update)
-          if (entry.description) {
-            setCollection(state => void state.entries.push(entry))
-            setTimeout(() => newEntryRef.current?.focus())
-          }
-        }}
-      />
-
-      <div>
-        {collection.suggestions?.map(suggestion => (
-          <div key={suggestion.id}>{suggestion.description}</div>
-        ))}
-      </div>
+      <AnimatePresence>
+        {Boolean(suggestions?.length) && (
+          <motion.div
+            className="suggestions"
+            transition={{ type: "spring", duration: 0.2, bounce: 0 }}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            style={{ overflow: "hidden" }}
+          >
+            <div className="suggestions-title">Related</div>
+            {suggestions?.map(suggestion => (
+              <div
+                className="suggestion"
+                key={suggestion.id}
+                onClick={() => {
+                  setCollection(state => void state.entries.push(getNewEntry(suggestion)))
+                }}
+              >
+                {suggestion.description}
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

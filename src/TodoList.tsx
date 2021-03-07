@@ -3,6 +3,7 @@ import { useHotkeys } from "react-hotkeys-hook"
 import { useCollectionsStore } from "./stores"
 import { Collection } from "./Collection"
 import { daysBetweenDates } from "./utils"
+import { BiLeftArrowAlt, BiRightArrowAlt } from "react-icons/bi"
 
 type TodoListProps = {
   [key: string]: unknown
@@ -10,7 +11,7 @@ type TodoListProps = {
 
 export function TodoList(props: TodoListProps) {
   const [viewDate, setViewDate] = React.useState(new Date())
-  const collections = useCollectionsStore(state => state.collections)
+  const { collections, set } = useCollectionsStore()
 
   return (
     <div>
@@ -20,7 +21,24 @@ export function TodoList(props: TodoListProps) {
           <Collection viewDate={viewDate} id={collection.id} key={collection.id} />
         ))}
       </div>
-      {/* <pre>{JSON.stringify(collections, null, 2)}</pre> */}
+
+      <input
+        name="displayName"
+        type="text"
+        style={{ marginTop: 50, border: "1px solid #ccc" }}
+        onBlur={event => {
+          const displayName = event.currentTarget.value
+          if (displayName) {
+            set(state => {
+              state.collections.push({ id: new Date().toISOString(), displayName, entries: [] })
+            })
+          }
+        }}
+      />
+      <details>
+        <summary>State</summary>
+        <pre>{JSON.stringify(collections, null, 2)}</pre>
+      </details>
     </div>
   )
 }
@@ -39,7 +57,9 @@ function TimelineNavigationBar({ date, onChange }: { date: Date; onChange: (day:
 
   return (
     <div className="timeline-navigation-bar">
-      <button onClick={() => offsetDate(-1)}>←</button>
+      <button onClick={() => offsetDate(-1)}>
+        <BiLeftArrowAlt />
+      </button>
       <div className="view-date">
         {useRelative
           ? new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(daysRelativeToNow, "days")
@@ -49,7 +69,9 @@ function TimelineNavigationBar({ date, onChange }: { date: Date; onChange: (day:
               month: "short",
             }).format(date)}
       </div>
-      <button onClick={() => offsetDate(1)}>→</button>
+      <button onClick={() => offsetDate(1)}>
+        <BiRightArrowAlt />
+      </button>
     </div>
   )
 }

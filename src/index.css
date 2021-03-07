@@ -25,6 +25,7 @@ button {
   background-color: transparent;
   color: inherit;
   border: none;
+  cursor: pointer;
 }
 
 input,
@@ -32,6 +33,7 @@ textarea {
   appearance: none;
   font: inherit;
   border-radius: 0;
+  margin: 0;
   background-color: transparent;
   color: inherit;
   border: none;
@@ -40,6 +42,10 @@ textarea {
   box-shadow: none;
   resize: none !important;
 }
+
+/*
+* TodoList
+*/
 
 .todo-list {
   padding: 0 20px;
@@ -67,23 +73,12 @@ textarea {
   text-transform: capitalize;
 }
 
-.time-track-entry {
-  display: flex;
-  align-items: center;
-  -webkit-app-region: no-drag;
-}
-
-.time-track-entry-list-item:not(:first-child) .time-track-entry {
-  border-top: 1px solid #f6f6f6;
-}
-
-.time-track-entry--input {
-  flex-grow: 1;
-  padding: 10px 14px;
-}
+/*
+* Collection
+*/
 
 .collection:not(:hover):not(:focus-within) .collection-menu-wrapper {
-  /* opacity: 0; */
+  opacity: 0;
   transition: opacity 0.7s cubic-bezier(0.95, 0.05, 0.795, 0.035);
 }
 
@@ -133,22 +128,97 @@ textarea {
 }
 
 .collection-entry-list {
-  background-color: white;
   border-radius: 3px;
   box-shadow: 0 1px 5px rgba(0, 0, 0, 0.08);
 }
 
+.collection-entry-list-item-item:not(:first-child) .time-track-entry {
+  border-top: 1px solid #f6f6f6;
+}
+
+/*
+* TimeTrackEntry
+*/
+
+.time-track-entry--input {
+  flex-grow: 1;
+  padding: 10px 14px;
+}
+
 .time-track-entry {
+  background-color: white;
   display: flex;
   align-items: center;
   -webkit-app-region: no-drag;
 }
 
-.entry-list-item:not(:first-child) .time-track-entry {
+.collection-entry-list-item:not(:first-child) .time-track-entry {
   border-top: 1px solid #f6f6f6;
+}
+
+.time-track-entry-input::placeholder {
+  color: #aaa;
 }
 
 .time-track-entry-input {
   flex-grow: 1;
-  padding: 10px 14px;
+  padding: 10px 8px;
+}
+
+.time-track-entry-checkbox {
+  position: relative;
+}
+
+.time-track-entry-checkbox input {
+  position: absolute !important;
+  height: 1px;
+  width: 1px;
+  overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px);
+}
+
+.time-track-entry-checkbox svg {
+  display: block;
+  border: 1px solid #e6e6e6;
+  width: 16px;
+  height: 16px;
+  border-radius: 100%;
+  margin-left: 8px;
+  padding: 1px;
+  color: transparent;
+  transition: 0.1s cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+.time-track-entry-checkbox:focus,
+.time-track-entry-checkbox:hover svg {
+  border-color: #d4d4d4;
+  color: #bbb;
+}
+.time-track-entry-checkbox input:checked + svg {
+  color: rgb(47, 153, 43);
+  border-color: rgb(47, 153, 43);
+}
+
+/*
+* Suggestions
+*/
+
+.suggestions {
+  /* padding: 20px 0 10px; */
+}
+
+.suggestions-title {
+  margin-top: 20px;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 12px;
+  color: #888;
+}
+
+.suggestion {
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.08);
+  border-radius: 3px;
+  background-color: white;
+  padding: 8px 10px;
+  margin: 4px 0;
 }
