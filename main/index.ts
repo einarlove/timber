@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron"
+import { app, BrowserWindow, ipcMain as ipc } from "electron"
 import { is } from "electron-util"
 import { store } from "./store"
 import "./emitters"
@@ -30,6 +30,10 @@ async function createMainWindow() {
 app.on("ready", createMainWindow)
 app.on("window-all-closed", () => {
   if (is.macos) app.quit()
+})
+
+app.on("browser-window-focus", () => {
+  mainWindow.webContents.send("window-focus")
 })
 
 app.on("activate", () => {
