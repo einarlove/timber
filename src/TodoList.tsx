@@ -4,6 +4,7 @@ import { useCollectionsStore } from "./stores"
 import { Collection } from "./Collection"
 import { daysBetweenDates } from "./utils"
 import { BiLeftArrowAlt, BiRightArrowAlt } from "react-icons/bi"
+import { TimeTrackingCollection } from "../types/TimeTracking"
 
 type TodoListProps = {
   [key: string]: unknown
@@ -12,6 +13,14 @@ type TodoListProps = {
 export function TodoList(props: TodoListProps) {
   const [viewDate, setViewDate] = React.useState(new Date())
   const { collections, set } = useCollectionsStore()
+
+  useHotkeys("cmd+shift+k", event => {
+    event.preventDefault()
+    const { ipcRenderer: ipc } = window.require("electron")
+    ipc.invoke("reset-collections").then((collections: TimeTrackingCollection[]) => {
+      useCollectionsStore.setState({ collections })
+    })
+  })
 
   return (
     <div>
