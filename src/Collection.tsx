@@ -1,6 +1,7 @@
 import produce from "immer"
 import React from "react"
 import { AnimatePresence, motion } from "framer-motion"
+import { BiGitBranch } from "react-icons/bi"
 import { useCollection, useCollectionsStore } from "./stores"
 import { TimeTrackEntry } from "./TimeTrackEntry"
 import { TimeTrackingEntry } from "../types/TimeTracking"
@@ -138,7 +139,7 @@ export function Collection({ id, viewDate }: CollectionProps) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            style={{ overflow: "hidden" }}
+            style={{ overflow: "auto" }}
           >
             <div className="suggestions-title">Related</div>
             {suggestions?.map(suggestion => (
@@ -149,7 +150,12 @@ export function Collection({ id, viewDate }: CollectionProps) {
                   setCollection(state => void state.entries.push(getNewEntry(suggestion)))
                 }}
               >
-                {suggestion.description}
+                {suggestion.description}{" "}
+                {suggestion.source === "git-commit" && (
+                  <span className="suggestion-branch">
+                    <BiGitBranch /> {suggestion.branch}
+                  </span>
+                )}
               </div>
             ))}
           </motion.div>

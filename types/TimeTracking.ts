@@ -12,7 +12,15 @@ export type TimeTrackingEntry = {
   description: string
   completedAt?: string
   partialCompletedAt?: string
-}
+} & (
+  | {
+      source: "git-commit"
+      branch?: string
+    }
+  | {
+      source?: never
+    }
+)
 
 type PowerOfficeConnection = {
   projectId: string
