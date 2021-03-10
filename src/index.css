@@ -129,6 +129,7 @@ textarea {
 
 .collection-entry-list {
   border-radius: 3px;
+  overflow: hidden;
   box-shadow: 0 1px 5px rgba(0, 0, 0, 0.08);
 }
 
@@ -189,7 +190,7 @@ textarea {
   transition: 0.1s cubic-bezier(0.215, 0.61, 0.355, 1);
 }
 
-.time-track-entry-checkbox:focus,
+.time-track-entry-checkbox input:focus + svg,
 .time-track-entry-checkbox:hover svg {
   border-color: #d4d4d4;
   color: #bbb;
@@ -219,6 +220,19 @@ textarea {
   box-shadow: 0 1px 5px rgba(0, 0, 0, 0.08);
   border-radius: 3px;
   background-color: white;
-  padding: 8px 10px;
+  padding: 8px 12px;
   margin: 4px 0;
+  display: flex;
+  font-size: 14px;
+}
+
+.suggestion-branch {
+  color: #aaa;
+  flex-shrink: 0;
+  margin: auto 0 auto auto;
+  display: flex;
+  align-items: center;
+  line-height: 0;
+  font-weight: 600;
+  gap: 3px;
 }
