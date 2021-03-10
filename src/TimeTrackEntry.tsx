@@ -18,11 +18,13 @@ type TimeTrackEntryProps = Partial<TimeTrackingEntry> & {
 }
 
 export function TimeTrackEntry(props: TimeTrackEntryProps) {
+  const checkboxRef = React.useRef<HTMLInputElement>(null)
   return (
     <div className="time-track-entry">
       <label className="time-track-entry-checkbox">
         <input
           type="checkbox"
+          ref={checkboxRef}
           defaultChecked={Boolean(props.completedAt || props.partialCompletedAt) || false}
           onChange={event =>
             props.set(entry => {
@@ -50,8 +52,12 @@ export function TimeTrackEntry(props: TimeTrackEntryProps) {
         }}
         // If Enter is pressed, update. Allow line-breaks with shift key
         onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+          if (event.key === "Escape") {
+            event.currentTarget.blur()
+          }
           if (event.key === "Enter" && !event.shiftKey) {
             event.preventDefault()
+            if (event.metaKey) checkboxRef.current!.checked = true
             event.currentTarget.blur()
             props.createNewAfter?.()
             // props.focus?.("forward")
@@ -66,7 +72,12 @@ export function TimeTrackEntry(props: TimeTrackEntryProps) {
           const value = event.currentTarget.value
           if (value) {
             if (value !== props.description) {
-              props.set(entry => void (entry.description = value.trim()))
+              props.set(entry => {
+                if (checkboxRef.current!.checked && !entry.completedAt) {
+                  entry.completedAt = new Date().toISOString()
+                }
+                entry.description = value.trim()
+              })
             }
           } else if (props.discard) {
             props.discard()
