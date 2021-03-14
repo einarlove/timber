@@ -53,10 +53,11 @@ export function useEntriesByDay(date: Date) {
 
   const refetchEntries = React.useCallback(() => {
     console.log("refetchEntries")
-    ipc.invoke("get-entries", { from: startOfDay(date), to: endOfDay(date) }).then(entries => {
-      console.log({ entries })
-      setEntries(entries)
-    })
+    ipc
+      .invoke("get-entries", { from: startOfDay(date), to: endOfDay(date) })
+      .then((entries: TimeTrackingEntry[]) => {
+        setEntries(entries)
+      })
   }, [date])
 
   React.useEffect(refetchEntries, [refetchEntries])
