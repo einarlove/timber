@@ -4,12 +4,11 @@ import { BiCheck } from "react-icons/bi"
 
 import { TimeTrackingEntry } from "../types/TimeTracking"
 
-type TimeTrackEntryProps = Partial<TimeTrackingEntry> & {
-  set: (update: (entry: TimeTrackingEntry) => void) => void
+type TimeTrackEntryProps = {
+  entry: TimeTrackingEntry
+  set: (entry: TimeTrackingEntry) => void
   discard?: () => void
   autoFocus?: boolean
-  // focusPrevious?: () => void
-  // focusNewEntry?: () => void
   focus?: (direction: "backward" | "forward" | "new") => void
   createNewAfter?: () => void
   defaultChecked?: boolean
@@ -17,7 +16,16 @@ type TimeTrackEntryProps = Partial<TimeTrackingEntry> & {
   inputRef: React.Ref<HTMLTextAreaElement>
 }
 
-export function TimeTrackEntry(props: TimeTrackEntryProps) {
+export function TimeTrackEntry({
+  entry,
+  set,
+  discard,
+  viewDate,
+  inputRef,
+  autoFocus,
+  createNewAfter,
+  focus,
+}: TimeTrackEntryProps) {
   const checkboxRef = React.useRef<HTMLInputElement>(null)
   return (
     <div className="time-track-entry">
@@ -25,22 +33,21 @@ export function TimeTrackEntry(props: TimeTrackEntryProps) {
         <input
           type="checkbox"
           ref={checkboxRef}
-          defaultChecked={Boolean(props.completedAt || props.partialCompletedAt) || false}
+          defaultChecked={Boolean(entry.completedAt || entry.partialCompletedAt) || false}
           onChange={event =>
-            props.set(entry => {
-              entry.completedAt = event.currentTarget.checked
-                ? props.viewDate.toISOString()
-                : undefined
+            set({
+              ...entry,
+              completedAt: event.currentTarget.checked ? viewDate.toISOString() : undefined,
             })
           }
         />
         <BiCheck />
       </label>
       <AutosizeTextarea
-        ref={props.inputRef}
-        autoFocus={props.autoFocus}
+        ref={inputRef}
+        autoFocus={autoFocus}
         className="time-track-entry-input"
-        defaultValue={props.description}
+        defaultValue={entry.description}
         spellCheck="false"
         autoCorrect="off"
         autoCapitalize="off"
@@ -57,30 +64,26 @@ export function TimeTrackEntry(props: TimeTrackEntryProps) {
           }
           if (event.key === "Enter" && !event.shiftKey) {
             event.preventDefault()
-            if (event.metaKey) checkboxRef.current!.checked = true
+            if (event.metaKey) checkboxRef.current!.checked = !checkboxRef.current!.checked
             event.currentTarget.blur()
-            props.createNewAfter?.()
-            // props.focus?.("forward")
+            createNewAfter?.()
           }
           if (event.key === "Backspace" && !event.repeat && !event.currentTarget.value) {
             event.preventDefault()
-            console.log("dis")
-            props.focus?.("backward")
+            focus?.("backward")
           }
         }}
         onBlur={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
           const value = event.currentTarget.value
           if (value) {
-            if (value !== props.description) {
-              props.set(entry => {
-                if (checkboxRef.current!.checked && !entry.completedAt) {
-                  entry.completedAt = new Date().toISOString()
-                }
-                entry.description = value.trim()
+            if (value !== entry.description) {
+              set({
+                ...entry,
+                description: value.trim(),
               })
             }
-          } else if (props.discard) {
-            props.discard()
+          } else if (discard) {
+            discard()
           }
         }}
       />

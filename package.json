@@ -35,7 +35,7 @@
     "@types/react": "^17.0.2",
     "@types/react-dom": "^17.0.1",
     "concurrently": "^6.0.0",
-    "electron": "^11.3.0",
+    "date-fns": "^2.17.0",
     "electron-store": "^7.0.2",
     "electron-util": "^0.14.2",
     "framer-motion": "^3.6.7",
@@ -52,10 +52,11 @@
     "react-scripts": "4.0.2",
     "ts-node": "^9.1.1",
     "typescript": "^4.1.5",
-    "wait-on": "^5.2.1",
-    "zustand": "^3.3.2"
+    "wait-on": "^5.2.1"
   },
   "devDependencies": {
-    "@types/lodash.startcase": "^4.4.6"
+    "@types/lodash.startcase": "^4.4.6",
+    "electron": "^11.3.0",
+    "electron-builder": "^22.10.5"
   }
 }

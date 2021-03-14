@@ -1,48 +1,86 @@
-import create from "zustand"
-import produce from "immer"
-import { TimeTrackingCollection } from "../types/TimeTracking"
-import { useCallback } from "react"
-
-type CollectionsStoreState = {
-  collections: TimeTrackingCollection[]
-}
-
-type CollectionsStore = CollectionsStoreState & {
-  set: (fn: (state: CollectionsStore) => void) => void
-}
-
-export const useCollectionsStore = create<CollectionsStore>(set => ({
-  collections: [],
-  set: fn => set(state => produce(state, fn)),
-}))
-
-export const useCollection = (id: string) =>
-  useCollectionsStore(
-    useCallback(
-      state => ({
-        collection: state.collections.find(collection => collection.id === id),
-        setCollection: (set: (state: TimeTrackingCollection) => void) =>
-          state.set(state => set(state.collections.find(collection => collection.id === id)!)),
-      }),
-      [id]
-    )
-  )
+import React from "react"
+import { startOfDay, endOfDay } from "date-fns"
+import { TimeTrackingCollection, TimeTrackingEntry } from "../types/TimeTracking"
 
 const { ipcRenderer: ipc } = window.require("electron")
 
-async function RefreshClientState() {
-  const collections = await ipc.invoke("get-collections")
-  useCollectionsStore.setState({ collections })
+export function useCollections() {
+  const [collections, setCollections] = React.useState<TimeTrackingCollection[]>()
+
+  const refetchCollection = React.useCallback(() => {
+    console.log("refetchCollection")
+    ipc.invoke("get-collections").then(setCollections)
+  }, [])
+
+  React.useEffect(refetchCollection, [refetchCollection])
+
+  React.useEffect(() => {
+    ipc.on("window-focus", refetchCollection)
+    return () => void ipc.removeListener("window-focus", refetchCollection)
+  }, [refetchCollection])
+
+  const set = React.useCallback(collections => {
+    ipc.send("set-collections", collections)
+    setCollections(collections)
+  }, [])
+
+  const setCollection = React.useCallback(
+    (collection: TimeTrackingCollection) =>
+      void ipc.invoke("set-collection", collection).then(refetchCollection).catch(console.log),
+    [refetchCollection]
+  )
+
+  const removeCollection = React.useCallback(
+    (collection: TimeTrackingCollection) =>
+      void ipc.invoke("remove-collection", collection).then(refetchCollection),
+    [refetchCollection]
+  )
+
+  const addCollection = React.useCallback(
+    async (collection: TimeTrackingEntry, index?: number) =>
+      void ipc.invoke("add-collection", collection, index).then(refetchCollection),
+    [refetchCollection]
+  )
+
+  return { collections, setCollections: set, setCollection, removeCollection, addCollection }
 }
 
-useCollectionsStore.subscribe(store => {
-  ipc.send("set-collections", store.collections)
-})
+const entriesByDay: { [date: string]: TimeTrackingEntry[] } = {}
 
-ipc.on("set-collections", (event, collections) => {
-  useCollectionsStore.setState({ collections })
-})
+export function useEntriesByDay(date: Date) {
+  const day = date.toISOString().slice(0, 10)
+  const [entries, setEntries] = React.useState<TimeTrackingEntry[] | undefined>(entriesByDay[day])
 
-ipc.on("window-focus", () => {
-  RefreshClientState()
-})
+  const refetchEntries = React.useCallback(() => {
+    console.log("refetchEntries")
+    ipc.invoke("get-entries", { from: startOfDay(date), to: endOfDay(date) }).then(entries => {
+      console.log({ entries })
+      setEntries(entries)
+    })
+  }, [date])
+
+  React.useEffect(refetchEntries, [refetchEntries])
+
+  React.useEffect(() => {
+    ipc.on("window-focus", refetchEntries)
+    return () => void ipc.removeListener("window-focus", refetchEntries)
+  }, [refetchEntries])
+
+  const setEntry = React.useCallback(
+    (entry: TimeTrackingEntry) => void ipc.invoke("set-entry", entry).then(refetchEntries),
+    [refetchEntries]
+  )
+
+  const removeEntry = React.useCallback(
+    (entry: TimeTrackingEntry) => void ipc.invoke("remove-entry", entry).then(refetchEntries),
+    [refetchEntries]
+  )
+
+  const addEntry = React.useCallback(
+    async (entry: TimeTrackingEntry, before?: TimeTrackingEntry) =>
+      void ipc.invoke("add-entry", entry, before).then(refetchEntries),
+    [refetchEntries]
+  )
+
+  return { entries, addEntry, setEntry, removeEntry, refetchEntries }
+}

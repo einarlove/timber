@@ -1,38 +1,41 @@
-import produce from "immer"
-import React from "react"
 import { AnimatePresence, motion } from "framer-motion"
+import React from "react"
 import { BiGitBranch } from "react-icons/bi"
-import { useCollection, useCollectionsStore } from "./stores"
+import { GitConnection, TimeTrackingCollection, TimeTrackingEntry } from "../types/TimeTracking"
+import { useEntriesByDay } from "./stores"
 import { TimeTrackEntry } from "./TimeTrackEntry"
-import { TimeTrackingEntry } from "../types/TimeTracking"
 import { isSameDay } from "./utils"
 
 type CollectionProps = {
-  id: string
   viewDate: Date
+  collection: TimeTrackingCollection
+  set: (collection: TimeTrackingCollection) => void
 }
 
 const { ipcRenderer: ipc } = window.require("electron")
 
-const getNewEntry = (initial?: Partial<TimeTrackingEntry>) => ({
+const getNewEntry = (collectionId: string, initial?: Partial<TimeTrackingEntry>) => ({
   id: new Date().toISOString(),
+  collectionId,
   description: "",
   ...initial,
 })
 
-export function Collection({ id, viewDate }: CollectionProps) {
+export function Collection({ collection, set, viewDate }: CollectionProps) {
   const autoFocusId = React.useRef<string>()
   const entryInputsRef = React.useRef<Record<string, HTMLTextAreaElement>>({})
-  const newEntryRef = React.useRef<TimeTrackingEntry>(getNewEntry())
+  const newEntryRef = React.useRef<TimeTrackingEntry>(getNewEntry(collection.id))
   const newEntryNodeRef = React.useRef<HTMLTextAreaElement>(null)
-  const { collection, setCollection } = useCollection(id)
+  const { entries, addEntry, setEntry, removeEntry } = useEntriesByDay(viewDate)
 
   if (!collection) return null
   const suggestions = collection.suggestions
-    ?.filter(suggestion => !collection.entries.some(entry => entry.id === suggestion.id))
+    ?.filter(suggestion => !entries?.some(entry => entry.id === suggestion.id))
     .filter(
       suggestion => !suggestion.completedAt || isSameDay(new Date(suggestion.completedAt), viewDate)
     )
+
+  console.log(entries)
 
   return (
     <div className="collection">
@@ -43,8 +46,12 @@ export function Collection({ id, viewDate }: CollectionProps) {
           <div className="collection-menu-dropdown">
             <button
               onClick={() => {
-                ipc.invoke("add-git", collection.id).then((collections: any) => {
-                  useCollectionsStore.setState({ collections })
+                ipc.invoke("add-git").then((connection: GitConnection) => {
+                  console.log("added git", connection)
+                  set({
+                    ...collection,
+                    repositories: [...(collection.repositories || []), connection],
+                  })
                 })
               }}
             >
@@ -55,8 +62,9 @@ export function Collection({ id, viewDate }: CollectionProps) {
       </div>
       <div className="collection-entry-list">
         <AnimatePresence>
-          {collection.entries
-            ?.filter(entry => {
+          {entries
+            ?.filter(entry => entry.collectionId === collection.id)
+            .filter(entry => {
               const completedDate = entry.completedAt || entry.partialCompletedAt
               return completedDate ? isSameDay(new Date(completedDate), viewDate) : true
             })
@@ -73,7 +81,7 @@ export function Collection({ id, viewDate }: CollectionProps) {
                   style={{ overflow: "hidden" }}
                 >
                   <TimeTrackEntry
-                    {...entry}
+                    entry={entry}
                     viewDate={viewDate}
                     autoFocus={autoFocusId.current === entry.id}
                     inputRef={ref => {
@@ -81,25 +89,25 @@ export function Collection({ id, viewDate }: CollectionProps) {
                         ? (entryInputsRef.current[entry.id] = ref)
                         : delete entryInputsRef.current[entry.id]
                     }}
-                    set={update => setCollection(state => update(state.entries[index]))}
-                    discard={() => setCollection(state => void state.entries.splice(index, 1))}
+                    // set={update => setCollection(state => update(state.entries[index]))}
+                    set={setEntry}
+                    discard={() => removeEntry(entry)}
                     focus={direction => {
                       const previousEntry = entries[index - 1]
-                      const nextEntry = collection.entries[index + 1]
+                      const nextEntry = entries[index + 1]
                       const focusEntry = direction === "backward" ? previousEntry : nextEntry
                       const focusInput =
                         entryInputsRef.current[focusEntry?.id] || newEntryNodeRef.current
                       focusInput?.focus()
                     }}
                     createNewAfter={() => {
-                      if (index === entries.length - 1) {
+                      const nextEntry = entries[index + 1]
+                      if (!nextEntry) {
                         newEntryNodeRef.current?.focus()
                       } else {
-                        setCollection(state => {
-                          const id = new Date().toISOString()
-                          autoFocusId.current = id
-                          state.entries.splice(index + 1, 0, getNewEntry({ id }))
-                        })
+                        const id = new Date().toISOString()
+                        autoFocusId.current = id
+                        addEntry(getNewEntry(collection.id, { id }), nextEntry)
                       }
                     }}
                   />
@@ -117,14 +125,13 @@ export function Collection({ id, viewDate }: CollectionProps) {
             style={{ overflow: "hidden" }}
           >
             <TimeTrackEntry
+              entry={newEntryRef.current}
               inputRef={newEntryNodeRef}
               viewDate={viewDate}
-              set={update => {
-                newEntryRef.current = produce(newEntryRef.current, update)
-                if (newEntryRef.current.description) {
-                  setCollection(state => void state.entries.push(newEntryRef.current))
-                  newEntryRef.current = getNewEntry()
-                  setTimeout(() => newEntryNodeRef.current?.focus())
+              set={entry => {
+                if (entry.description) {
+                  addEntry(getNewEntry(collection.id, entry))
+                  newEntryRef.current = getNewEntry(collection.id)
                 }
               }}
             />
@@ -147,7 +154,7 @@ export function Collection({ id, viewDate }: CollectionProps) {
                 className="suggestion"
                 key={suggestion.id}
                 onClick={() => {
-                  setCollection(state => void state.entries.push(getNewEntry(suggestion)))
+                  addEntry(getNewEntry(collection.id, suggestion))
                 }}
               >
                 {suggestion.description}{" "}

@@ -1,53 +1,37 @@
 import React from "react"
 import { useHotkeys } from "react-hotkeys-hook"
-import { useCollectionsStore } from "./stores"
+import { useCollections } from "./stores"
 import { Collection } from "./Collection"
 import { daysBetweenDates } from "./utils"
 import { BiLeftArrowAlt, BiRightArrowAlt } from "react-icons/bi"
-import { TimeTrackingCollection } from "../types/TimeTracking"
 
-type TodoListProps = {
-  [key: string]: unknown
-}
-
-export function TodoList(props: TodoListProps) {
+export function TodoList() {
   const [viewDate, setViewDate] = React.useState(new Date())
-  const { collections, set } = useCollectionsStore()
+  const { collections, setCollection } = useCollections()
 
-  useHotkeys("cmd+shift+k", event => {
-    event.preventDefault()
-    const { ipcRenderer: ipc } = window.require("electron")
-    ipc.invoke("reset-collections").then((collections: TimeTrackingCollection[]) => {
-      useCollectionsStore.setState({ collections })
-    })
-  })
+  useHotkeys(
+    "cmd+shift+k",
+    event => {
+      event.preventDefault()
+      const { ipcRenderer: ipc } = window.require("electron")
+      ipc.invoke("reset").then(() => window.location.reload())
+    },
+    []
+  )
 
   return (
     <div>
       <TimelineNavigationBar date={viewDate} onChange={date => setViewDate(date)} />
       <div className="todo-list">
         {collections?.map(collection => (
-          <Collection viewDate={viewDate} id={collection.id} key={collection.id} />
+          <Collection
+            set={setCollection}
+            collection={collection}
+            viewDate={viewDate}
+            key={collection.id}
+          />
         ))}
       </div>
-
-      <input
-        name="displayName"
-        type="text"
-        style={{ marginTop: 50, border: "1px solid #ccc" }}
-        onBlur={event => {
-          const displayName = event.currentTarget.value
-          if (displayName) {
-            set(state => {
-              state.collections.push({ id: new Date().toISOString(), displayName, entries: [] })
-            })
-          }
-        }}
-      />
-      <details>
-        <summary>State</summary>
-        <pre>{JSON.stringify(collections, null, 2)}</pre>
-      </details>
     </div>
   )
 }

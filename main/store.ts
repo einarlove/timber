@@ -2,15 +2,20 @@ import ElectronStore from "electron-store"
 import { produce } from "immer"
 import { WritableDraft } from "immer/dist/internal"
 
-import { TimeTrackingCollection } from "../types/TimeTracking"
+import { TimeTrackingCollection, TimeTrackingEntry } from "../types/TimeTracking"
 
 type Store = {
   collections: TimeTrackingCollection[]
+  entries: TimeTrackingEntry[]
   mainWindowBounds?: Electron.Rectangle
 }
 
 const defaults: Store = {
-  collections: [{ id: "initial-collection", displayName: "My todos", entries: [] }],
+  collections: [
+    { id: "initial-collection", displayName: "My todos" },
+    { id: "krogsveen", displayName: "Krogsveen" },
+  ],
+  entries: [],
 }
 
 export const store = new ElectronStore({

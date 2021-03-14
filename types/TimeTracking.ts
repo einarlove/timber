@@ -3,7 +3,6 @@ export type TimeTrackingCollection = {
   displayName: string
   repositories?: GitConnection[]
   project?: PowerOfficeConnection
-  entries: TimeTrackingEntry[]
   suggestions?: TimeTrackingEntry[]
 }
 
@@ -11,6 +10,7 @@ export type TimeTrackingEntry = {
   id: string
   description: string
   completedAt?: string
+  collectionId?: string
   partialCompletedAt?: string
 } & (
   | {
