@@ -35,8 +35,6 @@ export function Collection({ collection, set, viewDate }: CollectionProps) {
       suggestion => !suggestion.completedAt || isSameDay(new Date(suggestion.completedAt), viewDate)
     )
 
-  console.log(entries)
-
   return (
     <div className="collection">
       <div className="collection-header">
@@ -44,6 +42,18 @@ export function Collection({ collection, set, viewDate }: CollectionProps) {
         <div className="collection-menu-wrapper">
           <button className="collection-menu-toggle">•••</button>
           <div className="collection-menu-dropdown">
+            <button
+              onClick={() =>
+                navigator.clipboard.writeText(
+                  entries!
+                    .filter(e => e.completedAt)
+                    .map(e => `- ${e.description}`)
+                    .join("\n")
+                )
+              }
+            >
+              Copy completed
+            </button>
             <button
               onClick={() => {
                 ipc.invoke("add-git").then((connection: GitConnection) => {

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain as ipc } from "electron"
+import { app, BrowserWindow } from "electron"
 import { is } from "electron-util"
 import { store } from "./store"
 import "./emitters"
