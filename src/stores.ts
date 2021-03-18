@@ -1,6 +1,7 @@
 import React from "react"
-import { startOfDay, endOfDay } from "date-fns"
+import { startOfDay, endOfDay, getWeek, startOfWeek, endOfWeek } from "date-fns"
 import { TimeTrackingCollection, TimeTrackingEntry } from "../types/TimeTracking"
+import { isSameDay } from "./utils"
 
 const { ipcRenderer: ipc } = window.require("electron")
 
@@ -62,11 +63,6 @@ export function useEntriesByDay(date: Date) {
 
   React.useEffect(refetchEntries, [refetchEntries])
 
-  React.useEffect(() => {
-    ipc.on("window-focus", refetchEntries)
-    return () => void ipc.removeListener("window-focus", refetchEntries)
-  }, [refetchEntries])
-
   const setEntry = React.useCallback(
     (entry: TimeTrackingEntry) => void ipc.invoke("set-entry", entry).then(refetchEntries),
     [refetchEntries]
@@ -84,4 +80,37 @@ export function useEntriesByDay(date: Date) {
   )
 
   return { entries, addEntry, setEntry, removeEntry, refetchEntries }
+}
+
+export function useSuggestionsByDay(date: Date, collections?: TimeTrackingCollection[]) {
+  const [suggestions, setSuggestions] = React.useState<TimeTrackingEntry[]>()
+
+  const refetchSuggestions = React.useCallback(() => {
+    console.log("refetch suggestions")
+    ipc
+      .invoke("get-suggestions", {
+        fromDate: startOfWeek(date),
+        toDate: endOfWeek(date),
+        collectionIds: collections?.map(collection => collection.id),
+      })
+      .then((suggestions: TimeTrackingEntry[]) => {
+        setSuggestions(suggestions)
+      })
+  }, [date, collections])
+
+  React.useEffect(refetchSuggestions, [refetchSuggestions])
+
+  React.useEffect(() => {
+    ipc.on("window-focus", refetchSuggestions)
+    return () => void ipc.removeListener("window-focus", refetchSuggestions)
+  }, [refetchSuggestions])
+
+  return {
+    suggestions: suggestions?.filter(s => {
+      if (s.completedAt) return isSameDay(date, new Date(s.completedAt))
+      if (s.source === "calendar-event") return isSameDay(date, new Date(s.startDate))
+      return false
+    }),
+    refetchSuggestions,
+  }
 }

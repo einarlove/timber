@@ -5,14 +5,15 @@ import startCase from "lodash.startcase"
 import { ipcMain as ipc } from "electron"
 
 import { store } from "./store"
-import { getCollectionGitSuggestions } from "./functions"
+import { getCollectionGitSuggestions } from "./services/git"
+import { getEventSuggestions } from "./services/calendar"
 import { GitConnection, TimeTrackingCollection, TimeTrackingEntry } from "../types/TimeTracking"
 
 /**
  * Collections
  */
 
-ipc.handle("get-collections", () => getCollectionsWithSuggestions())
+ipc.handle("get-collections", () => store.get("collections"))
 ipc.handle("set-collections", (event, collections) => void store.set("collections", collections))
 
 ipc.handle("add-collection", (event, collection: TimeTrackingCollection, index?: number) => {
@@ -57,7 +58,7 @@ ipc.handle("get-entries", (event, { from, to }: { from: Date; to: Date }) => {
 })
 
 ipc.handle("add-entry", (event, entry: TimeTrackingEntry, before?: TimeTrackingEntry) => {
-  console.log("add-entry", entry, { before, after: null })
+  console.log("add-entry", entry, { before })
   const entries = store.get("entries")
   const index = before ? entries.findIndex(entry => entry.id === before.id) : undefined
   store.set("entries", [...entries.slice(0, index), entry, ...entries.slice(index || Infinity)])
@@ -82,21 +83,38 @@ ipc.handle("remove-entry", (event, entry: TimeTrackingEntry) => {
 })
 
 /**
+ * Suggestions
+ */
+
+ipc.handle(
+  "get-suggestions",
+  async (
+    event,
+    {
+      fromDate,
+      toDate,
+      collectionIds = [],
+    }: { fromDate: Date; toDate: Date; collectionIds?: string[] }
+  ) => {
+    console.log("get-suggestions", { fromDate, toDate, collectionIds })
+    const collections = store
+      .get("collections")
+      .filter(collection => collectionIds.includes(collection.id))
+
+    const suggestions = await Promise.all([
+      ...collections.map(collection => getCollectionGitSuggestions(collection, fromDate, toDate)),
+      getEventSuggestions(fromDate, toDate),
+    ] as Promise<TimeTrackingEntry[]>[])
+
+    return suggestions.flat()
+  }
+)
+
+/**
  * Other
  */
 
 ipc.handle("reset", () => store.clear())
-
-function getCollectionsWithSuggestions() {
-  return Promise.all(
-    store.get("collections").map(
-      async (collection): Promise<TimeTrackingCollection> => {
-        const suggestions = await getCollectionGitSuggestions(collection)
-        return { ...collection, suggestions }
-      }
-    )
-  )
-}
 
 ipc.handle(
   "add-git",

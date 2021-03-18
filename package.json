@@ -43,6 +43,7 @@
     "immer": "^8.0.1",
     "lodash.startcase": "^4.4.0",
     "node-fetch": "^2.6.1",
+    "node-ical": "^0.12.9",
     "nodemon": "^2.0.7",
     "playwright": "^1.8.1",
     "react": "^17.0.1",

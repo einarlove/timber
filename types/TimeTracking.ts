@@ -3,24 +3,33 @@ export type TimeTrackingCollection = {
   displayName: string
   repositories?: GitConnection[]
   project?: PowerOfficeConnection
-  suggestions?: TimeTrackingEntry[]
 }
 
-export type TimeTrackingEntry = {
+type BaseEntry = {
   id: string
   description: string
   completedAt?: string
   collectionId?: string
   partialCompletedAt?: string
-} & (
-  | {
-      source: "git-commit"
-      branch?: string
-    }
-  | {
-      source?: never
-    }
-)
+}
+
+export type BasicEntry = BaseEntry & {
+  source?: never
+}
+
+export type GitCommitEntry = BaseEntry & {
+  source: "git-commit"
+  branch?: string
+}
+
+export type CalendarEventEntry = BaseEntry & {
+  source: "calendar-event"
+  startDate: string
+  endDate: string
+  calendar: string
+}
+
+export type TimeTrackingEntry = BasicEntry | GitCommitEntry | CalendarEventEntry
 
 type PowerOfficeConnection = {
   projectId: string
