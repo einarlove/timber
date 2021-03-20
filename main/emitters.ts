@@ -96,25 +96,31 @@ ipc.handle(
       collectionIds = [],
     }: { fromDate: Date; toDate: Date; collectionIds?: string[] }
   ) => {
-    // console.log("get-suggestions", { fromDate, toDate, collectionIds })
-    const collections = store
-      .get("collections")
-      .filter(collection => collectionIds.includes(collection.id))
+    let promises: Promise<TimeTrackingEntry[] | undefined>[] = []
 
-    const suggestions = await Promise.all([
-      ...collections.map(collection => {
-        return getCollectionGitSuggestions(collection, fromDate, toDate)
-      }),
-      getEventSuggestions(fromDate, toDate),
-    ] as Promise<TimeTrackingEntry[]>[])
+    promises.push(
+      ...store
+        .get("collections")
+        .filter(collection => collectionIds.includes(collection.id))
+        .map(collection => {
+          return getCollectionGitSuggestions(collection, fromDate, toDate)
+        })
+    )
 
-    return suggestions.flat()
+    const calendars = store.get("settings").calendars
+    if (calendars?.length) promises.push(getEventSuggestions(calendars, fromDate, toDate))
+
+    const suggestions = await Promise.all(promises)
+    return suggestions.filter(s => s).flat()
   }
 )
 
 /**
  * Other
  */
+
+ipc.handle("get-settings", () => store.get("settings"))
+ipc.handle("set-settings", (event, settings) => store.set("settings", settings))
 
 ipc.handle("get-calendars", () => getCalendars())
 

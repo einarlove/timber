@@ -86,16 +86,16 @@ export function useSuggestionsByDay(date: Date, collections?: TimeTrackingCollec
   const [suggestions, setSuggestions] = React.useState<TimeTrackingEntry[]>()
 
   const refetchSuggestions = React.useCallback(() => {
-    console.log("refetch suggestions")
-    ipc
-      .invoke("get-suggestions", {
-        fromDate: startOfWeek(date),
-        toDate: endOfWeek(date),
-        collectionIds: collections?.map(collection => collection.id),
-      })
-      .then((suggestions: TimeTrackingEntry[]) => {
-        setSuggestions(suggestions)
-      })
+    if (collections)
+      ipc
+        .invoke("get-suggestions", {
+          fromDate: startOfWeek(date),
+          toDate: endOfWeek(date),
+          collectionIds: collections?.map(collection => collection.id),
+        })
+        .then((suggestions: TimeTrackingEntry[]) => {
+          setSuggestions(suggestions)
+        })
   }, [date, collections])
 
   React.useEffect(refetchSuggestions, [refetchSuggestions])

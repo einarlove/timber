@@ -11,13 +11,12 @@ export type Event = {
   calendar: string
 }
 
-async function getEvents(startDate: Date, endDate: Date): Promise<Event[]> {
+async function getEvents(calendars: string[], startDate: Date, endDate: Date): Promise<Event[]> {
   return new Promise((resolve, reject) =>
     exec(
-      `START_DATE=${startDate.toISOString()} END_DATE=${endDate.toISOString()} swift ${path.join(
-        __dirname,
-        "get-events.swift"
-      )}`,
+      `START_DATE=${startDate.toISOString()} END_DATE=${endDate.toISOString()} CALENDARS=${calendars.join(
+        ","
+      )} swift ${path.join(__dirname, "get-events.swift")}`,
       (error, output) => {
         if (error) return reject(error)
         const json = JSON.parse(output)
@@ -28,12 +27,13 @@ async function getEvents(startDate: Date, endDate: Date): Promise<Event[]> {
 }
 
 export async function getEventSuggestions(
+  calendars: string[],
   startDate: Date,
   endDate: Date
 ): Promise<CalendarEventEntry[] | undefined> {
-  const timer = time("calendar", "Get event suggestions")
+  const timer = time("calendar", "Get suggestions")
   try {
-    const events = await getEvents(startDate, endDate)
+    const events = await getEvents(calendars, startDate, endDate)
     timer.resolve()
     return events.map(event => ({
       id: event.id,

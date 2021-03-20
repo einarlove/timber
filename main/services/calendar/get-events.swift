@@ -19,14 +19,15 @@ func getCalendarEvents() {
     let iso8601DateFormatter = ISO8601DateFormatter()
     iso8601DateFormatter.formatOptions = [.withInternetDateTime, .withDashSeparatorInDate, .withFullDate, .withFractionalSeconds, .withColonSeparatorInTimeZone]
 
-    let startDateString = ProcessInfo.processInfo.environment["START_DATE"]!
-    let endDateString = ProcessInfo.processInfo.environment["END_DATE"]!
-    let startDate = iso8601DateFormatter.date(from: startDateString)
-    let endDate = iso8601DateFormatter.date(from: endDateString)
-
+    let CALENDARS = ProcessInfo.processInfo.environment["CALENDARS"]!
+    let START_DATE = ProcessInfo.processInfo.environment["START_DATE"]!
+    let END_DATE = ProcessInfo.processInfo.environment["END_DATE"]!
+    let startDate = iso8601DateFormatter.date(from: START_DATE)
+    let endDate = iso8601DateFormatter.date(from: END_DATE)
+    let calendarIds = CALENDARS.components(separatedBy: ",")
 
     for calendar in calendars {
-        if calendar.title == "einar@unfold.no" {
+        if calendarIds.contains(calendar.calendarIdentifier) {
             let predicate = eventStore.predicateForEvents(withStart: startDate!, end: endDate!, calendars: [calendar])
             let events = eventStore.events(matching: predicate)
 

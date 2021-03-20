@@ -41,7 +41,6 @@
     "electron-store": "^7.0.2",
     "electron-util": "^0.14.2",
     "framer-motion": "^3.6.7",
-    "immer": "^8.0.1",
     "lodash.groupby": "^4.6.0",
     "lodash.startcase": "^4.4.0",
     "ms": "^2.1.2",

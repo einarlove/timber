@@ -5,19 +5,16 @@ let eventStore = EKEventStore()
 let calendars = eventStore.calendars(for: .event)
 
 struct Calendar: Codable {
+    var id: String
     var name: String
     var color: String
     var source: String
 }
 
 func getCalendars() {
-    for calendar in calendars {
-        if calendar.title == "einar@unfold.no" {
-        }
-    }
-
     let data = calendars.map { (calendar) -> Calendar in
         return Calendar(
+            id: calendar.calendarIdentifier,
             name: calendar.title,
             color: getHexFromColor(color: calendar.color),
             source: calendar.source.title

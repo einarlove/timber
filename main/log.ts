@@ -4,7 +4,7 @@ import consola from "consola"
 export function time(scope: string, message: string) {
   const start = new Date()
   function resolve() {
-    consola.success(`[${scope}]: ${message} – ${ms(new Date().getTime() - start.getTime())}`)
+    consola.log(`[${scope}]: ${message} – ${ms(new Date().getTime() - start.getTime())}`)
   }
   function reject(error: Error | string) {
     consola.fatal(`[${scope}]: ${message} – ${ms(new Date().getTime() - start.getTime())}`)

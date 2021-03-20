@@ -31,8 +31,15 @@ export function TodoList() {
   )
 
   const [calendars, setCalendars] = React.useState<Calendar[]>()
+  const [settings, setSettings] = React.useState<{ calendars: string[] }>()
   React.useEffect(() => {
     ipc.invoke("get-calendars").then(setCalendars)
+  }, [])
+  React.useEffect(() => {
+    ipc.invoke("get-settings").then(set => {
+      console.log({ set })
+      setSettings(set)
+    })
   }, [])
 
   if (settingsIsOpen)
@@ -69,17 +76,36 @@ export function TodoList() {
               <div key={source}>
                 <h4>{source}</h4>
                 {calendars.map(calendar => (
-                  <div key={calendar.name} style={{ display: "flex", alignItems: "center" }}>
-                    <div
-                      style={{
-                        width: 6,
-                        height: 6,
-                        backgroundColor: calendar.color,
-                        marginRight: 8,
-                        borderRadius: "100%",
+                  <div className="calendar" key={calendar.name}>
+                    <input
+                      type="checkbox"
+                      value={calendar.id}
+                      checked={settings?.calendars?.includes(calendar.id)}
+                      onChange={event => {
+                        ipc
+                          .invoke("set-settings", {
+                            ...settings,
+                            calendars: event.currentTarget.checked
+                              ? [...(settings?.calendars || []), calendar.id]
+                              : settings?.calendars?.filter(c => c !== calendar.id),
+                          })
+                          .then(() => {
+                            ipc.invoke("get-settings").then(setSettings)
+                          })
                       }}
                     />
-                    {calendar.name}
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <div
+                        style={{
+                          width: 6,
+                          height: 6,
+                          backgroundColor: calendar.color,
+                          marginRight: 8,
+                          borderRadius: "100%",
+                        }}
+                      />
+                      {calendar.name}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -143,7 +169,9 @@ export function TodoList() {
                       Add to collection
                     </option>
                     {collections?.map(collection => (
-                      <option value={collection.id}>{collection.displayName}</option>
+                      <option key={collection.id} value={collection.id}>
+                        {collection.displayName}
+                      </option>
                     ))}
                   </select>
                   {suggestion.description}{" "}

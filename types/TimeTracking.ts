@@ -42,6 +42,7 @@ export type GitConnection = {
 }
 
 export type Calendar = {
+  id: string
   name: string
   color: string
   parent: string
