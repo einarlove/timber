@@ -3,14 +3,6 @@ import EventKit
 let eventStore = EKEventStore()
 let calendars = eventStore.calendars(for: .event)
 
-let iso8601DateFormatter = ISO8601DateFormatter()
-iso8601DateFormatter.formatOptions = [.withInternetDateTime, .withDashSeparatorInDate, .withFullDate, .withFractionalSeconds, .withColonSeparatorInTimeZone]
-
-let startDateString = ProcessInfo.processInfo.environment["START_DATE"]!
-let endDateString = ProcessInfo.processInfo.environment["END_DATE"]!
-let startDate = iso8601DateFormatter.date(from: startDateString)
-let endDate = iso8601DateFormatter.date(from: endDateString)
-
 struct Entry: Codable {
     var id: String
     var title: String
@@ -24,6 +16,15 @@ struct Entry: Codable {
 var array: [Entry] = []
 
 func getCalendarEvents() {
+    let iso8601DateFormatter = ISO8601DateFormatter()
+    iso8601DateFormatter.formatOptions = [.withInternetDateTime, .withDashSeparatorInDate, .withFullDate, .withFractionalSeconds, .withColonSeparatorInTimeZone]
+
+    let startDateString = ProcessInfo.processInfo.environment["START_DATE"]!
+    let endDateString = ProcessInfo.processInfo.environment["END_DATE"]!
+    let startDate = iso8601DateFormatter.date(from: startDateString)
+    let endDate = iso8601DateFormatter.date(from: endDateString)
+
+
     for calendar in calendars {
         if calendar.title == "einar@unfold.no" {
             let predicate = eventStore.predicateForEvents(withStart: startDate!, end: endDate!, calendars: [calendar])
@@ -78,3 +79,4 @@ switch EKEventStore.authorizationStatus(for: .event) {
   default:
       print("Case Default")
 }
+

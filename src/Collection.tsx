@@ -44,7 +44,6 @@ export function Collection({
   const newEntryNodeRef = React.useRef<HTMLTextAreaElement>(null)
 
   if (!collection) return null
-  console.log(suggestions)
 
   return (
     <div className="collection">
@@ -68,7 +67,6 @@ export function Collection({
             <button
               onClick={() => {
                 ipc.invoke("add-git").then((connection: GitConnection) => {
-                  console.log("added git", connection)
                   set({
                     ...collection,
                     repositories: [...(collection.repositories || []), connection],

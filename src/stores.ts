@@ -1,5 +1,5 @@
 import React from "react"
-import { startOfDay, endOfDay, getWeek, startOfWeek, endOfWeek } from "date-fns"
+import { startOfDay, endOfDay, startOfWeek, endOfWeek } from "date-fns"
 import { TimeTrackingCollection, TimeTrackingEntry } from "../types/TimeTracking"
 import { isSameDay } from "./utils"
 

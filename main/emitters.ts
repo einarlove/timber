@@ -6,7 +6,7 @@ import { ipcMain as ipc } from "electron"
 
 import { store } from "./store"
 import { getCollectionGitSuggestions } from "./services/git"
-import { getEventSuggestions } from "./services/calendar"
+import { getEventSuggestions, getCalendars } from "./services/calendar/calendar"
 import { GitConnection, TimeTrackingCollection, TimeTrackingEntry } from "../types/TimeTracking"
 
 /**
@@ -17,7 +17,7 @@ ipc.handle("get-collections", () => store.get("collections"))
 ipc.handle("set-collections", (event, collections) => void store.set("collections", collections))
 
 ipc.handle("add-collection", (event, collection: TimeTrackingCollection, index?: number) => {
-  console.log("add-collection", collection, { index })
+  // console.log("add-collection", collection, { index })
   const collections = store.get("collections")
   store.set("collections", [
     ...collections.slice(0, index),
@@ -27,7 +27,7 @@ ipc.handle("add-collection", (event, collection: TimeTrackingCollection, index?:
 })
 
 ipc.handle("set-collection", (event, collection: TimeTrackingCollection) => {
-  console.log("set-collection", collection)
+  // console.log("set-collection", collection)
   const collections = store.get("collections")
   store.set(
     "collections",
@@ -36,7 +36,7 @@ ipc.handle("set-collection", (event, collection: TimeTrackingCollection) => {
 })
 
 ipc.handle("remove-collection", (event, collection: TimeTrackingCollection) => {
-  console.log("remove-collection", collection)
+  // console.log("remove-collection", collection)
   const collections = store.get("collections")
   store.set(
     "collections",
@@ -58,14 +58,14 @@ ipc.handle("get-entries", (event, { from, to }: { from: Date; to: Date }) => {
 })
 
 ipc.handle("add-entry", (event, entry: TimeTrackingEntry, before?: TimeTrackingEntry) => {
-  console.log("add-entry", entry, { before })
+  // console.log("add-entry", entry, { before })
   const entries = store.get("entries")
   const index = before ? entries.findIndex(entry => entry.id === before.id) : undefined
   store.set("entries", [...entries.slice(0, index), entry, ...entries.slice(index || Infinity)])
 })
 
 ipc.handle("set-entry", (event, entry: TimeTrackingEntry) => {
-  console.log("set-entry", entry)
+  // console.log("set-entry", entry)
   const entries = store.get("entries")
   store.set(
     "entries",
@@ -74,7 +74,7 @@ ipc.handle("set-entry", (event, entry: TimeTrackingEntry) => {
 })
 
 ipc.handle("remove-entry", (event, entry: TimeTrackingEntry) => {
-  console.log("remove-entry", entry)
+  // console.log("remove-entry", entry)
   const entries = store.get("entries")
   store.set(
     "entries",
@@ -96,13 +96,15 @@ ipc.handle(
       collectionIds = [],
     }: { fromDate: Date; toDate: Date; collectionIds?: string[] }
   ) => {
-    console.log("get-suggestions", { fromDate, toDate, collectionIds })
+    // console.log("get-suggestions", { fromDate, toDate, collectionIds })
     const collections = store
       .get("collections")
       .filter(collection => collectionIds.includes(collection.id))
 
     const suggestions = await Promise.all([
-      ...collections.map(collection => getCollectionGitSuggestions(collection, fromDate, toDate)),
+      ...collections.map(collection => {
+        return getCollectionGitSuggestions(collection, fromDate, toDate)
+      }),
       getEventSuggestions(fromDate, toDate),
     ] as Promise<TimeTrackingEntry[]>[])
 
@@ -113,6 +115,8 @@ ipc.handle(
 /**
  * Other
  */
+
+ipc.handle("get-calendars", () => getCalendars())
 
 ipc.handle("reset", () => store.clear())
 

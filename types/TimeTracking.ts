@@ -40,3 +40,9 @@ export type GitConnection = {
   directory: string
   name: string
 }
+
+export type Calendar = {
+  name: string
+  color: string
+  parent: string
+}

@@ -1,6 +1,8 @@
 import { exec } from "child_process"
 import { addDays } from "date-fns"
+
 import { TimeTrackingCollection, GitCommitEntry } from "../../types/TimeTracking"
+import { time } from "../log"
 
 export const getCollectionGitSuggestions = async (
   collection: TimeTrackingCollection,
@@ -20,8 +22,9 @@ const getGitSuggestions = async (
   directory: string,
   fromDate: Date,
   toDate: Date
-): Promise<GitCommitEntry[]> =>
-  new Promise((resolve, reject) =>
+): Promise<GitCommitEntry[]> => {
+  const timer = time("git", "Get suggestions")
+  return new Promise((resolve, reject) =>
     exec(
       `cd ${directory} && git log --all --after="${fromDate
         .toISOString()
@@ -32,31 +35,34 @@ const getGitSuggestions = async (
           10
         )}" --no-merges --author=$(git config user.email) --pretty="format:%h•%ci•%s•%S"`,
       (error, output) => {
-        if (error) return reject(error)
-        resolve(
-          output
-            .split("\n")
-            .filter(l => l)
-            .reduce((suggestions, line) => {
-              console.log(line)
-              const [, hash, completedAt, description, ref] =
-                line.match(/(.*)•(.*)•(.*)•(.*)/) || []
-              const isRemote = ref.startsWith("refs/remotes/")
-              const isPullRequest = /\(#\d.*?\)$/.test(description)
+        if (error) {
+          timer.reject(error)
+          return reject(error)
+        }
 
-              if (!isRemote && !isPullRequest) {
-                suggestions.push({
-                  id: hash,
-                  completedAt,
-                  description,
-                  source: "git-commit",
-                  branch: ref?.match(/([^/]+$)/)?.[0],
-                })
-              }
+        const suggestions = output
+          .split("\n")
+          .filter(l => l)
+          .reduce((suggestions, line) => {
+            const [, hash, completedAt, description, ref] = line.match(/(.*)•(.*)•(.*)•(.*)/) || []
+            const isRemote = ref.startsWith("refs/remotes/")
+            const isPullRequest = /\(#\d.*?\)$/.test(description)
 
-              return suggestions
-            }, [] as GitCommitEntry[])
-        )
+            if (!isRemote && !isPullRequest) {
+              suggestions.push({
+                id: hash,
+                completedAt,
+                description,
+                source: "git-commit",
+                branch: ref?.match(/([^/]+$)/)?.[0],
+              })
+            }
+            return suggestions
+          }, [] as GitCommitEntry[])
+
+        timer.resolve()
+        resolve(suggestions)
       }
     )
   )
+}

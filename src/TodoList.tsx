@@ -1,13 +1,18 @@
 import React from "react"
 import { useHotkeys } from "react-hotkeys-hook"
+import groupBy from "lodash.groupby"
 import { useCollections, useEntriesByDay, useSuggestionsByDay } from "./stores"
 import { Collection } from "./Collection"
 import { daysBetweenDates } from "./utils"
 import { BiCalendar, BiGitBranch, BiLeftArrowAlt, BiRightArrowAlt } from "react-icons/bi"
 import { AnimatePresence, motion } from "framer-motion"
 import { format } from "date-fns"
+import { Calendar } from "../types/TimeTracking"
+
+const { ipcRenderer: ipc } = window.require("electron")
 
 export function TodoList() {
+  const [settingsIsOpen, setSettingsIsOpen] = React.useState(false)
   const [viewDate, setViewDate] = React.useState(new Date())
   const { collections, setCollection } = useCollections()
   const { suggestions } = useSuggestionsByDay(viewDate, collections)
@@ -16,17 +21,73 @@ export function TodoList() {
     suggestion => !suggestion.collectionId && !entries?.some(entry => entry.id === suggestion.id)
   )
 
-  console.log("all", suggestions)
-
   useHotkeys(
     "cmd+shift+k",
     event => {
       event.preventDefault()
-      const { ipcRenderer: ipc } = window.require("electron")
       ipc.invoke("reset").then(() => window.location.reload())
     },
     []
   )
+
+  const [calendars, setCalendars] = React.useState<Calendar[]>()
+  React.useEffect(() => {
+    ipc.invoke("get-calendars").then(setCalendars)
+  }, [])
+
+  if (settingsIsOpen)
+    return (
+      <>
+        <button onClick={() => setSettingsIsOpen(false)} style={{ marginBlock: 30 }}>
+          ← Back
+        </button>
+        <div
+          style={{
+            display: "grid",
+            gap: 20,
+            justifyItems: "center",
+          }}
+        >
+          <button
+            onClick={() => {
+              entries?.forEach(entry => removeEntry(entry))
+            }}
+          >
+            Delete entries for {viewDate.toDateString()}
+          </button>
+          <button
+            onClick={() => {
+              ipc.invoke("reset").then(() => window.location.reload())
+            }}
+          >
+            Reset all data
+          </button>
+
+          <h3>Calendars</h3>
+          <div>
+            {Object.entries(groupBy(calendars, "source")).map(([source, calendars]) => (
+              <div key={source}>
+                <h4>{source}</h4>
+                {calendars.map(calendar => (
+                  <div key={calendar.name} style={{ display: "flex", alignItems: "center" }}>
+                    <div
+                      style={{
+                        width: 6,
+                        height: 6,
+                        backgroundColor: calendar.color,
+                        marginRight: 8,
+                        borderRadius: "100%",
+                      }}
+                    />
+                    {calendar.name}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </>
+    )
 
   return (
     <>
@@ -64,19 +125,17 @@ export function TodoList() {
               style={{ overflow: "auto" }}
             >
               {unrelatedSuggestions?.map(suggestion => (
-                <label
-                  className="suggestion"
-                  key={suggestion.id}
-                  onClick={() => {
-                    // addEntry(getNewEntry(collection.id, suggestion))
-                  }}
-                >
+                <label className="suggestion" key={suggestion.id}>
                   <select
                     className="select-overlay"
                     value=""
                     onChange={event => {
                       if (event.currentTarget.value) {
-                        addEntry({ ...suggestion, collectionId: event.currentTarget.value })
+                        addEntry({
+                          ...suggestion,
+                          collectionId: event.currentTarget.value,
+                          completedAt: viewDate.toISOString(),
+                        })
                       }
                     }}
                   >
@@ -108,6 +167,10 @@ export function TodoList() {
           </div>
         )}
       </AnimatePresence>
+
+      <button onClick={() => setSettingsIsOpen(true)} style={{ margin: "40px 0" }}>
+        Settings
+      </button>
     </>
   )
 }
