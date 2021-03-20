@@ -45,10 +45,9 @@ const getGitSuggestions = async (
           .filter(l => l)
           .reduce((suggestions, line) => {
             const [, hash, completedAt, description, ref] = line.match(/(.*)•(.*)•(.*)•(.*)/) || []
-            const isRemote = ref.startsWith("refs/remotes/")
             const isPullRequest = /\(#\d.*?\)$/.test(description)
 
-            if (!isRemote && !isPullRequest) {
+            if (!isPullRequest) {
               suggestions.push({
                 id: hash,
                 completedAt,
