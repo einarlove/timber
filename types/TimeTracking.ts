@@ -1,3 +1,5 @@
+import { GitConnection, PowerOfficeConnection } from "./connections"
+
 export type TimeTrackingCollection = {
   id: string
   displayName: string
@@ -30,20 +32,3 @@ export type CalendarEventEntry = BaseEntry & {
 }
 
 export type TimeTrackingEntry = BasicEntry | GitCommitEntry | CalendarEventEntry
-
-type PowerOfficeConnection = {
-  projectId: string
-  activityId: string
-}
-
-export type GitConnection = {
-  directory: string
-  name: string
-}
-
-export type Calendar = {
-  id: string
-  name: string
-  color: string
-  parent: string
-}

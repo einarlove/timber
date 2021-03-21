@@ -7,7 +7,8 @@ import { ipcMain as ipc } from "electron"
 import { store } from "./store"
 import { getCollectionGitSuggestions } from "./services/git"
 import { getEventSuggestions, getCalendars } from "./services/calendar/calendar"
-import { GitConnection, TimeTrackingCollection, TimeTrackingEntry } from "../types/TimeTracking"
+import { TimeTrackingCollection, TimeTrackingEntry } from "../types/TimeTracking"
+import { GitConnection } from "../types/connections"
 
 /**
  * Collections
@@ -17,7 +18,6 @@ ipc.handle("get-collections", () => store.get("collections"))
 ipc.handle("set-collections", (event, collections) => void store.set("collections", collections))
 
 ipc.handle("add-collection", (event, collection: TimeTrackingCollection, index?: number) => {
-  // console.log("add-collection", collection, { index })
   const collections = store.get("collections")
   store.set("collections", [
     ...collections.slice(0, index),
@@ -27,7 +27,6 @@ ipc.handle("add-collection", (event, collection: TimeTrackingCollection, index?:
 })
 
 ipc.handle("set-collection", (event, collection: TimeTrackingCollection) => {
-  // console.log("set-collection", collection)
   const collections = store.get("collections")
   store.set(
     "collections",
@@ -36,7 +35,6 @@ ipc.handle("set-collection", (event, collection: TimeTrackingCollection) => {
 })
 
 ipc.handle("remove-collection", (event, collection: TimeTrackingCollection) => {
-  // console.log("remove-collection", collection)
   const collections = store.get("collections")
   store.set(
     "collections",
@@ -58,14 +56,12 @@ ipc.handle("get-entries", (event, { from, to }: { from: Date; to: Date }) => {
 })
 
 ipc.handle("add-entry", (event, entry: TimeTrackingEntry, before?: TimeTrackingEntry) => {
-  // console.log("add-entry", entry, { before })
   const entries = store.get("entries")
   const index = before ? entries.findIndex(entry => entry.id === before.id) : undefined
   store.set("entries", [...entries.slice(0, index), entry, ...entries.slice(index || Infinity)])
 })
 
 ipc.handle("set-entry", (event, entry: TimeTrackingEntry) => {
-  // console.log("set-entry", entry)
   const entries = store.get("entries")
   store.set(
     "entries",
@@ -74,7 +70,6 @@ ipc.handle("set-entry", (event, entry: TimeTrackingEntry) => {
 })
 
 ipc.handle("remove-entry", (event, entry: TimeTrackingEntry) => {
-  // console.log("remove-entry", entry)
   const entries = store.get("entries")
   store.set(
     "entries",

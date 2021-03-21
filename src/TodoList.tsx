@@ -7,7 +7,8 @@ import { daysBetweenDates } from "./utils"
 import { BiCalendar, BiGitBranch, BiLeftArrowAlt, BiRightArrowAlt } from "react-icons/bi"
 import { AnimatePresence, motion } from "framer-motion"
 import { format } from "date-fns"
-import { Calendar } from "../types/TimeTracking"
+import { Settings } from "../types/settings"
+import { Calendar } from "../types/connections"
 
 const { ipcRenderer: ipc } = window.require("electron")
 
@@ -31,85 +32,134 @@ export function TodoList() {
   )
 
   const [calendars, setCalendars] = React.useState<Calendar[]>()
-  const [settings, setSettings] = React.useState<{ calendars: string[] }>()
+  const [settings, setSettings] = React.useState<Settings>()
   React.useEffect(() => {
     ipc.invoke("get-calendars").then(setCalendars)
   }, [])
   React.useEffect(() => {
-    ipc.invoke("get-settings").then(set => {
-      console.log({ set })
-      setSettings(set)
-    })
+    ipc.invoke("get-settings").then(set => setSettings(set))
   }, [])
 
   if (settingsIsOpen)
     return (
       <>
-        <button onClick={() => setSettingsIsOpen(false)} style={{ marginBlock: 30 }}>
+        <button onClick={() => setSettingsIsOpen(false)} style={{ margin: 20 }}>
           ← Back
         </button>
         <div
           style={{
             display: "grid",
-            gap: 20,
-            justifyItems: "center",
+            gap: 60,
+            padding: "40px 20px",
+            justifyItems: "stretch",
           }}
         >
-          <button
-            onClick={() => {
-              entries?.forEach(entry => removeEntry(entry))
-            }}
-          >
-            Delete entries for {viewDate.toDateString()}
-          </button>
-          <button
-            onClick={() => {
-              ipc.invoke("reset").then(() => window.location.reload())
-            }}
-          >
-            Reset all data
-          </button>
+          <fieldset>
+            <legend>PowerOffice</legend>
+            <form
+              onSubmit={event => {
+                event.preventDefault()
+                const usernameNode = event.currentTarget.elements.namedItem(
+                  "username"
+                ) as HTMLInputElement
+                const passwordNode = event.currentTarget.elements.namedItem(
+                  "password"
+                ) as HTMLInputElement
 
-          <h3>Calendars</h3>
-          <div>
-            {Object.entries(groupBy(calendars, "source")).map(([source, calendars]) => (
-              <div key={source}>
-                <h4>{source}</h4>
-                {calendars.map(calendar => (
-                  <div className="calendar" key={calendar.name}>
-                    <input
-                      type="checkbox"
-                      value={calendar.id}
-                      checked={settings?.calendars?.includes(calendar.id)}
-                      onChange={event => {
-                        ipc
-                          .invoke("set-settings", {
-                            ...settings,
-                            calendars: event.currentTarget.checked
-                              ? [...(settings?.calendars || []), calendar.id]
-                              : settings?.calendars?.filter(c => c !== calendar.id),
-                          })
-                          .then(() => {
-                            ipc.invoke("get-settings").then(setSettings)
-                          })
-                      }}
-                    />
-                    <div style={{ display: "flex", alignItems: "center" }}>
-                      <div
-                        style={{
-                          width: 6,
-                          height: 6,
-                          backgroundColor: calendar.color,
-                          marginRight: 8,
-                          borderRadius: "100%",
+                ipc
+                  .invoke("set-settings", {
+                    ...settings,
+                    powerOfficeAccount: {
+                      username: usernameNode.value,
+                      password: passwordNode.value,
+                    },
+                  } as Settings)
+                  .then(() => {
+                    ipc.invoke("get-settings").then(setSettings)
+                  })
+
+                console.log(usernameNode.value, passwordNode.value)
+              }}
+            >
+              <input
+                placeholder="Username"
+                name="username"
+                defaultValue={settings?.powerOfficeAccount?.username}
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                name="password"
+                defaultValue={settings?.powerOfficeAccount?.password}
+              />
+              <button type="submit">Lagre</button>
+            </form>
+          </fieldset>
+
+          <fieldset>
+            <legend>Calenders</legend>
+            <div>
+              {Object.entries(groupBy(calendars, "source")).map(([source, calendars]) => (
+                <fieldset key={source}>
+                  <legend>{source}</legend>
+                  {calendars.map(calendar => (
+                    <div className="calendar" key={calendar.name}>
+                      <input
+                        type="checkbox"
+                        value={calendar.id}
+                        checked={settings?.calendars?.includes(calendar.id)}
+                        onChange={event => {
+                          ipc
+                            .invoke("set-settings", {
+                              ...settings,
+                              calendars: event.currentTarget.checked
+                                ? [...(settings?.calendars || []), calendar.id]
+                                : settings?.calendars?.filter(c => c !== calendar.id),
+                            })
+                            .then(() => {
+                              ipc.invoke("get-settings").then(setSettings)
+                            })
                         }}
                       />
-                      {calendar.name}
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <div
+                          style={{
+                            width: 6,
+                            height: 6,
+                            backgroundColor: calendar.color,
+                            marginRight: 8,
+                            borderRadius: "100%",
+                          }}
+                        />
+                        {calendar.name}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ))}
+                  ))}
+                </fieldset>
+              ))}
+            </div>
+          </fieldset>
+          <div
+            style={{
+              display: "grid",
+              gap: 20,
+              justifyItems: "flex-start",
+            }}
+          >
+            <button
+              onClick={() => {
+                entries?.forEach(entry => removeEntry(entry))
+              }}
+            >
+              Delete entries for {viewDate.toDateString()}
+            </button>
+            <button
+              onClick={() => {
+                ipc.invoke("reset").then(() => window.location.reload())
+              }}
+            >
+              Reset all data
+            </button>
           </div>
         </div>
       </>

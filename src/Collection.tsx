@@ -1,15 +1,10 @@
 import { AnimatePresence, motion } from "framer-motion"
 import React from "react"
 import { BiGitBranch } from "react-icons/bi"
-import {
-  GitConnection,
-  TimeTrackingCollection,
-  TimeTrackingEntry,
-  BasicEntry,
-} from "../types/TimeTracking"
+import { GitConnection } from "../types/connections"
+import { TimeTrackingCollection, TimeTrackingEntry, BasicEntry } from "../types/TimeTracking"
 import { useEntriesByDay } from "./stores"
 import { TimeTrackEntry } from "./TimeTrackEntry"
-import { isSameDay } from "./utils"
 
 type CollectionProps = {
   viewDate: Date

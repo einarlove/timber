@@ -1,13 +1,11 @@
 import ElectronStore from "electron-store"
-
+import { Settings } from "../types/settings"
 import { TimeTrackingCollection, TimeTrackingEntry } from "../types/TimeTracking"
 
 type Store = {
   collections: TimeTrackingCollection[]
   entries: TimeTrackingEntry[]
-  settings: {
-    calendars?: string[]
-  }
+  settings: Settings
   mainWindowBounds?: Electron.Rectangle
 }
 
