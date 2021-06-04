@@ -9,6 +9,7 @@ import { getCollectionGitSuggestions } from "./services/git"
 import { getEventSuggestions, getCalendars } from "./services/calendar/calendar"
 import { TimeTrackingCollection, TimeTrackingEntry } from "../types/TimeTracking"
 import { GitConnection } from "../types/connections"
+import { getProjects } from "./services/poweroffice"
 
 /**
  * Collections
@@ -101,6 +102,11 @@ ipc.handle(
           return getCollectionGitSuggestions(collection, fromDate, toDate)
         })
     )
+
+    const settings = store.get("settings")
+    if (settings.powerOfficeAccount) {
+      getProjects(settings.powerOfficeAccount)
+    }
 
     const calendars = store.get("settings").calendars
     if (calendars?.length) promises.push(getEventSuggestions(calendars, fromDate, toDate))

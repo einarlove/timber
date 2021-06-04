@@ -13,7 +13,9 @@ async function createMainWindow() {
     height: 800,
     fullscreenable: false,
     frame: false,
-    resizable: false,
+    minWidth: 400,
+    maxWidth: 800,
+    minHeight: 400,
     webPreferences: {
       devTools: is.development,
       nodeIntegration: true,

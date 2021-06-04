@@ -11,9 +11,11 @@ export const getCollectionGitSuggestions = async (
 ): Promise<GitCommitEntry[]> => {
   if (!collection.repositories) return []
   const suggestions = await Promise.all(
-    collection.repositories.map(repo => {
-      return getGitSuggestions(repo.directory, fromDate, toDate)
-    })
+    collection.repositories
+      .filter(r => r) // Quickfix
+      .map(repo => {
+        return getGitSuggestions(repo.directory, fromDate, toDate)
+      })
   )
   return suggestions.flat().map(entry => ({ ...entry, collectionId: collection.id }))
 }
@@ -40,22 +42,34 @@ const getGitSuggestions = async (
           return reject(error)
         }
 
+        console.log(
+          `git log --all --after="${fromDate.toISOString().slice(0, 10)}" --before="${addDays(
+            toDate,
+            1
+          )
+            .toISOString()
+            .slice(
+              0,
+              10
+            )}" --no-merges --author=$(git config user.email) --pretty="format:%h•%ci•%s•%S"`
+        )
+
         const suggestions = output
           .split("\n")
           .filter(l => l)
           .reduce((suggestions, line) => {
-            const [, hash, completedAt, description, ref] = line.match(/(.*)•(.*)•(.*)•(.*)/) || []
-            const isPullRequest = /\(#\d.*?\)$/.test(description)
+            const [hash, completedAt, description, ref] = line.split("•")
 
-            if (!isPullRequest) {
-              suggestions.push({
-                id: hash,
-                completedAt,
-                description,
-                source: "git-commit",
-                branch: ref?.match(/([^/]+$)/)?.[0],
-              })
-            }
+            if (ref === "refs/stash") return suggestions
+
+            suggestions.push({
+              id: hash,
+              completedAt,
+              description,
+              source: "git-commit",
+              branch: ref?.match(/([^/]+$)/)?.[0],
+            })
+
             return suggestions
           }, [] as GitCommitEntry[])
 
